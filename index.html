@@ -172,6 +172,12 @@
         }
         .btn-main:active { transform: scale(0.97); }
 
+        .btn-secondary {
+            background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); 
+            padding: 15px; border-radius: 18px; font-size: 14px; font-weight: 600; width: 100%;
+            cursor: pointer; margin-bottom: 10px;
+        }
+
         .timer-box {
             font-size: 64px; font-weight: 800; text-align: center; margin: 40px 0;
             font-variant-numeric: tabular-nums; letter-spacing: -3px;
@@ -234,14 +240,15 @@
     <div id="screen-timer" class="screen">
         <div style="margin-top: 40px; text-align: center;">
             <h1>Обсуждение</h1>
-            <p class="hint">Найдите шпиона</p>
+            <p class="hint">Найдите шпиона!</p>
         </div>
 
         <div class="timer-box" id="timerDisplay">5:00</div>
 
-        <div class="glass-card" style="text-align: center;">
-            <p style="color: var(--text-muted); margin-bottom: 10px;">Тема была:</p>
-            <h2 style="color: #fff; font-size: 24px;" id="finalWord">...</h2>
+        <div class="glass-card" style="text-align: center;" id="finalCard">
+            <p style="color: var(--text-muted); margin-bottom: 10px;">Загаданное слово</p>
+            <button class="btn-secondary" id="showAnswerBtn" onclick="showAnswer()">Показать слово</button>
+            <h2 style="color: #fff; font-size: 24px; display: none;" id="finalWord">...</h2>
         </div>
 
         <button class="btn-main" onclick="location.reload()">Новая игра</button>
@@ -295,13 +302,15 @@
             game.current = 0;
             showScreen('screen-game');
             
-            // Сразу рендерим первого игрока
+            // Сброс интерфейса таймера для новой игры
+            document.getElementById('showAnswerBtn').style.display = 'block';
+            document.getElementById('finalWord').style.display = 'none';
+            document.getElementById('finalWord').innerText = "...";
+
             renderCardContent();
-            // Убеждаемся, что шторка закрыта и интерфейс готов
             resetCardState();
         }
 
-        // Эта функция просто обновляет текст внутри (под шторкой)
         function renderCardContent() {
             const role = game.roles[game.current];
             const wordEl = document.getElementById('roleWord');
@@ -320,10 +329,9 @@
             document.getElementById('playerCounter').innerText = `Игрок ${game.current + 1}`;
         }
 
-        // Эта функция возвращает карточку в закрытое состояние
         function resetCardState() {
             isRevealed = false;
-            document.getElementById('curtain').classList.remove('hidden'); // ЗАКРЫВАЕМ
+            document.getElementById('curtain').classList.remove('hidden'); 
             document.getElementById('actionBtn').style.opacity = '0';
             document.getElementById('actionBtn').style.pointerEvents = 'none';
             document.getElementById('statusHint').innerText = "Передай телефон этому игроку";
@@ -332,7 +340,7 @@
         function revealCard() {
             if (isRevealed) return;
             isRevealed = true;
-            document.getElementById('curtain').classList.add('hidden'); // ОТКРЫВАЕМ
+            document.getElementById('curtain').classList.add('hidden'); 
             document.getElementById('statusHint').innerText = "Запомни свою роль";
             
             setTimeout(() => {
@@ -342,35 +350,33 @@
             }, 500);
         }
 
-        // САМОЕ ВАЖНОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ
         function nextPlayer() {
-            // 1. Скрываем кнопку, чтобы нельзя было нажать дважды
             const btn = document.getElementById('actionBtn');
             btn.style.opacity = '0';
             btn.style.pointerEvents = 'none';
 
-            // 2. Сначала закрываем шторку!
             document.getElementById('curtain').classList.remove('hidden');
             document.getElementById('statusHint').innerText = "Передаю ход...";
 
-            // 3. Ждем 400мс (пока шторка закроется), и только потом меняем данные
             setTimeout(() => {
                 game.current++;
                 if (game.current >= game.roles.length) {
                     startTimer();
                     showScreen('screen-timer');
                 } else {
-                    renderCardContent(); // Меняем текст под закрытой шторкой
-                    resetCardState();    // Сбрасываем состояние
+                    renderCardContent(); 
+                    resetCardState();    
                 }
             }, 400);
         }
 
         function startTimer() {
-            document.getElementById('finalWord').innerText = `${game.secret} (${config.topic})`;
             let time = 300;
             const display = document.getElementById('timerDisplay');
             
+            // Очищаем старый интервал, если был
+            if(timerInt) clearInterval(timerInt);
+
             timerInt = setInterval(() => {
                 const m = Math.floor(time / 60);
                 const s = time % 60;
@@ -378,6 +384,14 @@
                 time--;
                 if (time < 0) clearInterval(timerInt);
             }, 1000);
+        }
+
+        // Новая функция для кнопки "Показать слово"
+        function showAnswer() {
+            document.getElementById('showAnswerBtn').style.display = 'none';
+            const wordEl = document.getElementById('finalWord');
+            wordEl.style.display = 'block';
+            wordEl.innerText = `${game.secret} (${config.topic})`;
         }
 
         function showScreen(id) {
