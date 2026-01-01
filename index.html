@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Шпион</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body { 
+            background-color: var(--tg-theme-bg-color, #212121); 
+            color: var(--tg-theme-text-color, #ffffff); 
+            font-family: sans-serif; 
+            text-align: center; 
+            margin: 0; 
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            min-height: 90vh;
+        }
+        .btn {
+            background-color: var(--tg-theme-button-color, #3390ec);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            padding: 15px;
+            width: 100%;
+            font-size: 18px;
+            border-radius: 12px;
+            margin-top: 20px;
+            cursor: pointer;
+        }
+        .card {
+            background: rgba(255,255,255,0.1);
+            padding: 30px;
+            border-radius: 15px;
+            margin-bottom: 20px;
+        }
+        .hidden { display: none; }
+        .blur { filter: blur(20px); user-select: none; }
+        .revealed { filter: none; }
+        h1, h2 { margin: 10px 0; }
+    </style>
+</head>
+<body>
+
+    <div id="setup">
+        <h1>🕵️ Игра Шпион</h1>
+        <p>Количество игроков:</p>
+        <div style="font-size: 30px; font-weight: bold; margin: 20px;">
+            <span id="countDisplay">4</span>
+        </div>
+        <input type="range" id="countInput" min="3" max="12" value="4" style="width: 80%;" oninput="updateCount()">
+        <button class="btn" onclick="startGame()">Начать раздачу</button>
+    </div>
+
+    <div id="game" class="hidden">
+        <h2>Игрок <span id="playerNum">1</span></h2>
+        
+        <div class="card" id="cardArea">
+            <div id="secretContent" class="blur">
+                <h2 id="roleTitle" style="color: #ff5252;">Роль</h2>
+                <p id="locationText" style="font-size: 14px; opacity: 0.8;">Локация</p>
+            </div>
+        </div>
+
+        <p id="hint">Нажми "Показать", чтобы увидеть роль</p>
+        <button class="btn" id="mainBtn" onclick="handleLogic()">Показать</button>
+    </div>
+
+    <script>
+        // Инициализация Telegram
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+
+        // Данные
+        const locations = ["Больница", "Школа", "Ресторан", "Самолет", "Пляж", "Банк", "Театр"];
+        let players = [];
+        let currentPlayer = 0;
+        let isViewed = false;
+
+        function updateCount() {
+            document.getElementById('countDisplay').innerText = document.getElementById('countInput').value;
+        }
+
+        function startGame() {
+            const count = parseInt(document.getElementById('countInput').value);
+            const location = locations[Math.floor(Math.random() * locations.length)];
+            
+            // Создаем массив игроков
+            players = Array(count).fill({ role: "Мирный", loc: location });
+            
+            // Назначаем шпиона
+            const spyIdx = Math.floor(Math.random() * count);
+            players[spyIdx] = { role: "ШПИОН 🕵️", loc: "Угадай локацию!" };
+
+            document.getElementById('setup').classList.add('hidden');
+            document.getElementById('game').classList.remove('hidden');
+        }
+
+        function handleLogic() {
+            const secret = document.getElementById('secretContent');
+            const btn = document.getElementById('mainBtn');
+            const hint = document.getElementById('hint');
+
+            if (!isViewed) {
+                // ПОКАЗАТЬ РОЛЬ
+                document.getElementById('roleTitle').innerText = players[currentPlayer].role;
+                document.getElementById('locationText').innerText = players[currentPlayer].loc;
+                
+                secret.classList.remove('blur');
+                btn.innerText = "Скрыть и передать";
+                hint.innerText = "Запомни и передай следующему";
+                isViewed = true;
+            } else {
+                // СКРЫТЬ
+                secret.classList.add('blur');
+                currentPlayer++;
+
+                if (currentPlayer >= players.length) {
+                    tg.showPopup({ title: "Готово!", message: "Все роли розданы. Начинайте обсуждение! Таймер: 5 минут." });
+                    tg.close(); // Можно закрыть приложение или сделать рестарт
+                } else {
+                    document.getElementById('playerNum').innerText = currentPlayer + 1;
+                    btn.innerText = "Показать";
+                    hint.innerText = "Передай телефон следующему игроку";
+                    isViewed = false;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
