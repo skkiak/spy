@@ -3,130 +3,442 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Шпион</title>
+    <title>Шпион Premium</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { 
-            background-color: var(--tg-theme-bg-color, #212121); 
-            color: var(--tg-theme-text-color, #ffffff); 
-            font-family: sans-serif; 
-            text-align: center; 
-            margin: 0; 
+        :root {
+            --bg-dark: #020610; /* Очень темный синий */
+            --bg-light: #0f1c35; /* Чуть светлее */
+            --accent: #2b6eff; /* Яркий синий для акцентов */
+            --accent-glow: rgba(43, 110, 255, 0.4);
+            --text-main: #ffffff;
+            --text-sec: #8b9bb4;
+            --glass: rgba(255, 255, 255, 0.05);
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        body {
+            margin: 0;
             padding: 20px;
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-dark) 0%, var(--bg-light) 100%);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow-x: hidden;
+        }
+
+        /* Анимации */
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-5px); } 100% { transform: translateY(0px); } }
+        
+        .screen {
+            width: 100%;
+            max-width: 400px;
+            display: none; /* Скрыто по умолчанию */
+            flex-direction: column;
+            align-items: center;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+
+        .active-screen { display: flex; }
+
+        h1 { font-size: 28px; font-weight: 800; margin-bottom: 5px; text-shadow: 0 0 20px var(--accent-glow); }
+        h2 { font-size: 22px; margin: 10px 0; font-weight: 600; }
+        p { color: var(--text-sec); font-size: 14px; text-align: center; margin-bottom: 20px; }
+
+        /* Карточки и контейнеры */
+        .glass-panel {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            margin-bottom: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Выбор темы */
+        .topics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .topic-btn {
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid var(--border);
+            color: var(--text-sec);
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .topic-btn.selected {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px var(--accent-glow);
+            transform: scale(1.02);
+        }
+
+        /* Слайдер игроков */
+        .slider-container {
+            width: 100%;
+            margin: 20px 0;
+            text-align: center;
+        }
+        
+        input[type=range] {
+            width: 100%;
+            -webkit-appearance: none;
+            background: transparent;
+        }
+        
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            background: var(--border);
+            border-radius: 3px;
+        }
+        
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 24px;
+            width: 24px;
+            border-radius: 50%;
+            background: var(--accent);
+            margin-top: -9px;
+            box-shadow: 0 0 15px var(--accent-glow);
+            border: 2px solid #fff;
+        }
+
+        .count-display {
+            font-size: 42px;
+            font-weight: 800;
+            color: var(--accent);
+            margin-bottom: 10px;
+        }
+
+        /* Игровой процесс */
+        .card-reveal-area {
+            height: 300px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            min-height: 90vh;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
         }
-        .btn {
-            background-color: var(--tg-theme-button-color, #3390ec);
-            color: var(--tg-theme-button-text-color, #ffffff);
+
+        .secret-word {
+            font-size: 28px;
+            font-weight: 800;
+            text-align: center;
+            color: white;
+            z-index: 2;
+        }
+        
+        .spy-alert { color: #ff4757; text-shadow: 0 0 20px rgba(255, 71, 87, 0.5); font-size: 32px; }
+
+        .blur-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(15, 28, 53, 0.95);
+            backdrop-filter: blur(20px);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            transition: opacity 0.4s ease;
+            border-radius: 16px;
+        }
+
+        .blur-overlay.hidden { opacity: 0; pointer-events: none; }
+
+        .tap-icon {
+            font-size: 40px;
+            margin-bottom: 15px;
+            animation: float 2s infinite ease-in-out;
+        }
+
+        /* Кнопка */
+        .main-btn {
+            background: var(--accent);
+            color: white;
             border: none;
-            padding: 15px;
             width: 100%;
+            padding: 18px;
             font-size: 18px;
-            border-radius: 12px;
-            margin-top: 20px;
+            font-weight: 700;
+            border-radius: 16px;
             cursor: pointer;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
         }
-        .card {
-            background: rgba(255,255,255,0.1);
-            padding: 30px;
-            border-radius: 15px;
-            margin-bottom: 20px;
+        .main-btn:active { transform: scale(0.96); }
+
+        /* Таймер */
+        .timer-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            border: 4px solid var(--border);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 48px;
+            font-weight: 800;
+            margin: 30px auto;
+            position: relative;
         }
-        .hidden { display: none; }
-        .blur { filter: blur(20px); user-select: none; }
-        .revealed { filter: none; }
-        h1, h2 { margin: 10px 0; }
+        
+        .timer-circle::after {
+            content: '';
+            position: absolute;
+            top: -4px; left: -4px; right: -4px; bottom: -4px;
+            border-radius: 50%;
+            border: 4px solid var(--accent);
+            border-top-color: transparent;
+            animation: spin 4s linear infinite; /* Простая анимация для вида */
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
     </style>
 </head>
 <body>
 
-    <div id="setup">
-        <h1>🕵️ Игра Шпион</h1>
-        <p>Количество игроков:</p>
-        <div style="font-size: 30px; font-weight: bold; margin: 20px;">
-            <span id="countDisplay">4</span>
-        </div>
-        <input type="range" id="countInput" min="3" max="12" value="4" style="width: 80%;" oninput="updateCount()">
-        <button class="btn" onclick="startGame()">Начать раздачу</button>
-    </div>
+    <div id="screen-setup" class="screen active-screen">
+        <h1>ШПИОН</h1>
+        <p>Настрой игру под свою компанию</p>
 
-    <div id="game" class="hidden">
-        <h2>Игрок <span id="playerNum">1</span></h2>
-        
-        <div class="card" id="cardArea">
-            <div id="secretContent" class="blur">
-                <h2 id="roleTitle" style="color: #ff5252;">Роль</h2>
-                <p id="locationText" style="font-size: 14px; opacity: 0.8;">Локация</p>
+        <div class="glass-panel">
+            <p style="margin: 0 0 10px 0;">Количество игроков</p>
+            <div class="count-display"><span id="countVal">4</span></div>
+            <div class="slider-container">
+                <input type="range" id="playerCount" min="3" max="15" value="4" oninput="updateCountDisplay()">
             </div>
         </div>
 
-        <p id="hint">Нажми "Показать", чтобы увидеть роль</p>
-        <button class="btn" id="mainBtn" onclick="handleLogic()">Показать</button>
+        <p style="margin-bottom: 10px;">Выберите тему:</p>
+        <div class="topics-grid" id="topicsContainer">
+            </div>
+
+        <button class="main-btn" onclick="startGame()">Начать игру</button>
+    </div>
+
+    <div id="screen-game" class="screen">
+        <h2 id="playerTitle">Игрок 1</h2>
+        <p>Передайте телефон этому игроку</p>
+
+        <div class="glass-panel card-reveal-area" id="cardArea" onclick="toggleReveal()">
+            
+            <div class="blur-overlay" id="curtain">
+                <div class="tap-icon">👆</div>
+                <div style="font-weight: 600;">Нажми, чтобы увидеть</div>
+            </div>
+
+            <div id="secretContent">
+                <p style="margin-bottom: 5px; opacity: 0.6;">Твоя роль:</p>
+                <div id="roleText" class="secret-word">...</div>
+                <div id="topicHint" style="margin-top: 15px; font-size: 12px; color: var(--accent);">Тема: ...</div>
+            </div>
+
+        </div>
+
+        <p id="instruction" style="opacity: 0.5;">Нажми на карту, чтобы узнать роль</p>
+        
+        <button class="main-btn" id="nextBtn" onclick="nextPlayer()" style="display: none; background: #222;">
+            Скрыть и передать
+        </button>
+    </div>
+
+    <div id="screen-timer" class="screen">
+        <h1>Время пошло!</h1>
+        <p>Задавайте вопросы и ищите шпиона</p>
+
+        <div class="timer-circle" id="timerDisplay">5:00</div>
+
+        <div class="glass-panel">
+            <p>Локация / Тема была:</p>
+            <h2 id="finalLocation" style="color: var(--accent);">...</h2>
+        </div>
+
+        <button class="main-btn" onclick="resetGame()">Новая игра</button>
     </div>
 
     <script>
-        // Инициализация Telegram
+        // --- ДАННЫЕ (Темы) ---
+        const gameData = {
+            "Clash Royale": [
+                "Бревно", "Фаербол", "Зап", "Скелеты", "Ледяной дух", "Рыцарь", 
+                "Валькирия", "Лучницы", "Мушкетёр", "Хог Райдер", "Шахтёр", 
+                "Королевский гигант", "Гоблинская бочка", "Мега рыцарь", 
+                "Инферно-башня", "Тесла", "Электро-дракон", "Колдун", "Ведьма", "Принц"
+            ],
+            "Marvel": [
+                "Человек-паук", "Железный человек", "Капитан Америка", "Тор", "Халк",
+                "Доктор Стрэндж", "Чёрная вдова", "Чёрная пантера", "Алая Ведьма", "Локи"
+            ],
+            "Популярные": [
+                "MrBeast", "IShowSpeed", "Charlie Kirk", "Eminem", "Epstein", 
+                "Шеф", "Огузок", "Азим Каныбеков"
+            ],
+            "Учителя": [
+                "Зеленый", "Коля", "Эмчек", "Кубик", "Короз", "Нуралы", 
+                "Туалет", "Алинка", "Луиза", "Чайнагуль"
+            ]
+        };
+
+        // --- ПЕРЕМЕННЫЕ ---
+        let selectedTopic = "Clash Royale";
+        let playerCount = 4;
+        let players = []; // Массив ролей
+        let currentIndex = 0;
+        let currentSecret = ""; 
+        let currentTopicName = "";
+        let isRevealed = false;
+        let timerInterval;
+
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        // Данные
-        const locations = ["Больница", "Школа", "Ресторан", "Самолет", "Пляж", "Банк", "Театр"];
-        let players = [];
-        let currentPlayer = 0;
-        let isViewed = false;
-
-        function updateCount() {
-            document.getElementById('countDisplay').innerText = document.getElementById('countInput').value;
+        // --- ИНИЦИАЛИЗАЦИЯ ---
+        function init() {
+            const container = document.getElementById('topicsContainer');
+            const topics = Object.keys(gameData);
+            
+            topics.forEach(topic => {
+                const btn = document.createElement('div');
+                btn.className = `topic-btn ${topic === selectedTopic ? 'selected' : ''}`;
+                btn.innerText = topic;
+                btn.onclick = () => selectTopic(topic, btn);
+                container.appendChild(btn);
+            });
         }
 
+        function updateCountDisplay() {
+            playerCount = document.getElementById('playerCount').value;
+            document.getElementById('countVal').innerText = playerCount;
+        }
+
+        function selectTopic(topic, btnElement) {
+            selectedTopic = topic;
+            // Обновляем визуал
+            document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('selected'));
+            btnElement.classList.add('selected');
+        }
+
+        // --- ЛОГИКА ИГРЫ ---
         function startGame() {
-            const count = parseInt(document.getElementById('countInput').value);
-            const location = locations[Math.floor(Math.random() * locations.length)];
-            
-            // Создаем массив игроков
-            players = Array(count).fill({ role: "Мирный", loc: location });
-            
-            // Назначаем шпиона
-            const spyIdx = Math.floor(Math.random() * count);
-            players[spyIdx] = { role: "ШПИОН 🕵️", loc: "Угадай локацию!" };
+            // 1. Выбираем слово
+            const wordList = gameData[selectedTopic];
+            currentSecret = wordList[Math.floor(Math.random() * wordList.length)];
+            currentTopicName = selectedTopic;
 
-            document.getElementById('setup').classList.add('hidden');
-            document.getElementById('game').classList.remove('hidden');
+            // 2. Генерируем роли
+            players = Array(parseInt(playerCount)).fill(currentSecret);
+            const spyCount = 1; // Можно увеличить в будущем
+            
+            // Ставим шпиона
+            let spyIndex = Math.floor(Math.random() * parseInt(playerCount));
+            players[spyIndex] = "ШПИОН";
+
+            // 3. Сброс UI
+            currentIndex = 0;
+            isRevealed = false;
+            switchScreen('screen-game');
+            updateCardUI();
         }
 
-        function handleLogic() {
-            const secret = document.getElementById('secretContent');
-            const btn = document.getElementById('mainBtn');
-            const hint = document.getElementById('hint');
+        function updateCardUI() {
+            document.getElementById('playerTitle').innerText = `Игрок ${currentIndex + 1}`;
+            document.getElementById('curtain').classList.remove('hidden'); // Закрываем шторку
+            document.getElementById('nextBtn').style.display = 'none';
+            document.getElementById('instruction').innerText = "Нажми на карту, чтобы узнать роль";
+            isRevealed = false;
 
-            if (!isViewed) {
-                // ПОКАЗАТЬ РОЛЬ
-                document.getElementById('roleTitle').innerText = players[currentPlayer].role;
-                document.getElementById('locationText').innerText = players[currentPlayer].loc;
-                
-                secret.classList.remove('blur');
-                btn.innerText = "Скрыть и передать";
-                hint.innerText = "Запомни и передай следующему";
-                isViewed = true;
+            // Подготовка текста (но он скрыт шторкой)
+            const roleEl = document.getElementById('roleText');
+            const hintEl = document.getElementById('topicHint');
+            const role = players[currentIndex];
+
+            if (role === "ШПИОН") {
+                roleEl.innerText = "ТЫ ШПИОН 🕵️";
+                roleEl.classList.add('spy-alert');
+                hintEl.innerText = "Твоя задача: не спалиться и угадать тему.";
             } else {
-                // СКРЫТЬ
-                secret.classList.add('blur');
-                currentPlayer++;
-
-                if (currentPlayer >= players.length) {
-                    tg.showPopup({ title: "Готово!", message: "Все роли розданы. Начинайте обсуждение! Таймер: 5 минут." });
-                    tg.close(); // Можно закрыть приложение или сделать рестарт
-                } else {
-                    document.getElementById('playerNum').innerText = currentPlayer + 1;
-                    btn.innerText = "Показать";
-                    hint.innerText = "Передай телефон следующему игроку";
-                    isViewed = false;
-                }
+                roleEl.innerText = role;
+                roleEl.classList.remove('spy-alert');
+                hintEl.innerText = `Тема: ${currentTopicName}`;
             }
         }
+
+        function toggleReveal() {
+            if (isRevealed) return; // Уже открыто
+
+            // Открываем
+            document.getElementById('curtain').classList.add('hidden');
+            document.getElementById('nextBtn').style.display = 'block';
+            document.getElementById('instruction').innerText = "Запомни роль и нажми кнопку внизу";
+            isRevealed = true;
+        }
+
+        function nextPlayer() {
+            currentIndex++;
+            if (currentIndex >= players.length) {
+                // Все посмотрели
+                startTimer();
+                switchScreen('screen-timer');
+            } else {
+                // Следующий
+                updateCardUI();
+            }
+        }
+
+        // --- ТАЙМЕР ---
+        function startTimer() {
+            document.getElementById('finalLocation').innerText = currentSecret;
+            let time = 300; // 5 минут
+            const display = document.getElementById('timerDisplay');
+            
+            clearInterval(timerInterval);
+            timerInterval = setInterval(() => {
+                let m = Math.floor(time / 60);
+                let s = time % 60;
+                display.innerText = `${m}:${s < 10 ? '0'+s : s}`;
+                time--;
+                if (time < 0) clearInterval(timerInterval);
+            }, 1000);
+        }
+
+        function resetGame() {
+            clearInterval(timerInterval);
+            switchScreen('screen-setup');
+        }
+
+        // --- УТИЛИТЫ ---
+        function switchScreen(id) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active-screen'));
+            document.getElementById(id).classList.add('active-screen');
+        }
+
+        // Запуск
+        init();
+
     </script>
 </body>
 </html>
