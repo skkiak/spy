@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -9,8 +8,8 @@
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         :root {
-            --bg-overlay: rgba(10, 10, 10, 0.85); /* Затемнение фона */
-            --card-bg: rgba(40, 40, 40, 0.4); /* Прозрачный серый */
+            --bg-overlay: rgba(10, 10, 10, 0.85);
+            --card-bg: rgba(40, 40, 40, 0.4);
             --card-border: rgba(255, 255, 255, 0.08);
             --text-main: #f0f0f0;
             --text-muted: #888888;
@@ -26,7 +25,7 @@
             font-family: 'Manrope', sans-serif;
             color: var(--text-main);
             background-color: #000;
-            /* ФОНОВОЕ ИЗОБРАЖЕНИЕ */
+            /* ФОТОГРАФИЯ ФОНА */
             background-image: url('IMG_0165.jpeg'); 
             background-size: cover;
             background-position: center;
@@ -38,12 +37,11 @@
             overflow: hidden;
         }
 
-        /* Затемняющий слой поверх картинки */
         .app-overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: var(--bg-overlay);
-            backdrop-filter: blur(5px); /* Легкий блюр самой фотки на фоне */
+            backdrop-filter: blur(8px);
             z-index: -1;
         }
 
@@ -62,15 +60,13 @@
 
         @keyframes fadeIn { from { opacity: 0; transform: scale(0.98); } to { opacity: 1; transform: scale(1); } }
 
-        /* ТИПОГРАФИКА */
         h1 { font-size: 32px; font-weight: 800; margin: 0; letter-spacing: -1px; }
         h2 { font-size: 20px; font-weight: 600; margin: 0; color: var(--text-muted); }
         .hint { color: var(--text-muted); font-size: 13px; margin-top: 5px; }
 
-        /* КАРТОЧКИ И ПАНЕЛИ */
         .glass-card {
             background: var(--card-bg);
-            backdrop-filter: blur(20px); /* Сильный эффект стекла */
+            backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
             border: 1px solid var(--card-border);
             border-radius: 24px;
@@ -79,7 +75,7 @@
             margin-bottom: 20px;
         }
 
-        /* ВЫБОР ТЕМЫ (Minimal Chips) */
+        /* Выбор темы */
         .topics-scroller {
             display: flex;
             flex-wrap: wrap;
@@ -107,28 +103,19 @@
             border-color: #fff;
         }
 
-        /* СЛАЙДЕР */
         .slider-wrapper { margin: 30px 0; text-align: center; }
         .count-val { font-size: 48px; font-weight: 800; letter-spacing: -2px; line-height: 1; }
         
         input[type=range] {
-            width: 100%;
-            height: 4px;
-            background: rgba(255,255,255,0.1);
-            border-radius: 2px;
-            appearance: none;
-            margin-top: 20px;
+            width: 100%; height: 4px; background: rgba(255,255,255,0.1);
+            border-radius: 2px; appearance: none; margin-top: 20px;
         }
         input[type=range]::-webkit-slider-thumb {
-            appearance: none;
-            width: 24px; height: 24px;
-            background: #fff;
-            border-radius: 50%;
-            cursor: pointer;
-            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            appearance: none; width: 24px; height: 24px; background: #fff;
+            border-radius: 50%; cursor: pointer; box-shadow: 0 0 10px rgba(0,0,0,0.5);
         }
 
-        /* ИГРОВАЯ КАРТА (ПРОСВЕЧИВАЮЩАЯ) */
+        /* ИГРОВАЯ ЗОНА */
         .game-card-area {
             flex-grow: 1;
             display: flex;
@@ -139,70 +126,55 @@
 
         .secret-card {
             width: 100%;
-            height: 320px;
+            height: 340px;
             position: relative;
             border-radius: 24px;
-            /* Здесь эффект просвечивания */
-            background: rgba(20, 20, 20, 0.6); 
+            background: rgba(20, 20, 20, 0.6);
             box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             border: 1px solid rgba(255,255,255,0.1);
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             overflow: hidden;
-            transition: all 0.3s ease;
+            transition: transform 0.2s;
         }
+        .secret-card:active { transform: scale(0.98); }
 
-        /* Шторка внутри карты */
+        /* ШТОРКА */
         .curtain {
             position: absolute;
             top: 0; left: 0; right: 0; bottom: 0;
-            background: #1a1a1a; /* Плотный серый, чтобы скрыть текст */
+            background: #1a1a1a; 
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            z-index: 10;
-            transition: opacity 0.4s ease, transform 0.4s ease;
+            z-index: 20;
+            transition: opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+            opacity: 1;
         }
         
         .curtain.hidden {
             opacity: 0;
             pointer-events: none;
-            transform: scale(1.1); /* Эффект исчезновения */
         }
 
-        .role-text { font-size: 32px; font-weight: 800; text-align: center; z-index: 1; }
+        .role-text { font-size: 32px; font-weight: 800; text-align: center; z-index: 1; margin: 0 10px; }
         .role-sub { font-size: 14px; color: var(--text-muted); margin-top: 10px; z-index: 1; }
-        
         .spy-text { color: var(--danger); text-shadow: 0 0 20px rgba(255, 82, 82, 0.4); }
 
-        /* КНОПКИ */
         .btn-main {
-            background: #fff;
-            color: #000;
-            border: none;
-            padding: 20px;
-            border-radius: 18px;
-            font-size: 16px;
-            font-weight: 700;
-            width: 100%;
-            cursor: pointer;
-            margin-bottom: 20px;
-            transition: transform 0.1s;
+            background: #fff; color: #000; border: none; padding: 20px;
+            border-radius: 18px; font-size: 16px; font-weight: 700; width: 100%;
+            cursor: pointer; margin-bottom: 20px; transition: transform 0.1s;
         }
         .btn-main:active { transform: scale(0.97); }
 
-        /* ТАЙМЕР */
         .timer-box {
-            font-size: 64px;
-            font-weight: 800;
-            text-align: center;
-            margin: 40px 0;
-            font-variant-numeric: tabular-nums;
-            letter-spacing: -3px;
+            font-size: 64px; font-weight: 800; text-align: center; margin: 40px 0;
+            font-variant-numeric: tabular-nums; letter-spacing: -3px;
         }
     </style>
 </head>
@@ -226,8 +198,7 @@
 
         <div>
             <h2>Тема</h2>
-            <div class="topics-scroller" id="topicsContainer">
-                </div>
+            <div class="topics-scroller" id="topicsContainer"></div>
         </div>
 
         <button class="btn-main" onclick="startGame()">Начать игру</button>
@@ -255,8 +226,8 @@
             </div>
         </div>
 
-        <button class="btn-main" id="actionBtn" onclick="nextPlayer()" style="opacity: 0; pointer-events: none; transition: opacity 0.3s;">
-            Я запомнил
+        <button class="btn-main" id="actionBtn" onclick="nextPlayer()" style="opacity: 0; pointer-events: none; transition: opacity 0.2s;">
+            Я запомнил, далее
         </button>
     </div>
 
@@ -269,7 +240,7 @@
         <div class="timer-box" id="timerDisplay">5:00</div>
 
         <div class="glass-card" style="text-align: center;">
-            <p style="color: var(--text-muted); margin-bottom: 10px;">Локация / Слово</p>
+            <p style="color: var(--text-muted); margin-bottom: 10px;">Тема была:</p>
             <h2 style="color: #fff; font-size: 24px;" id="finalWord">...</h2>
         </div>
 
@@ -277,7 +248,6 @@
     </div>
 
     <script>
-        // ДАННЫЕ
         const data = {
             "Clash Royale": ["Бревно", "Фаербол", "Зап", "Скелеты", "Ледяной дух", "Рыцарь", "Валькирия", "Лучницы", "Мушкетёр", "Хог Райдер", "Шахтёр", "Королевский гигант", "Гоблинская бочка", "Мега рыцарь", "Инферно-башня", "Тесла", "Электро-дракон", "Колдун", "Ведьма", "Принц"],
             "Marvel": ["Человек-паук", "Железный человек", "Капитан Америка", "Тор", "Халк", "Доктор Стрэндж", "Чёрная вдова", "Чёрная пантера", "Алая Ведьма", "Локи"],
@@ -294,7 +264,6 @@
         tg.expand();
         tg.enableClosingConfirmation();
 
-        // INIT
         window.onload = () => {
             const container = document.getElementById('topicsContainer');
             Object.keys(data).forEach(t => {
@@ -315,30 +284,25 @@
             document.getElementById('countVal').innerText = config.players;
         }
 
-        // GAME LOGIC
         function startGame() {
             const list = data[config.topic];
             game.secret = list[Math.floor(Math.random() * list.length)];
             
-            // Генерация ролей
             game.roles = Array(parseInt(config.players)).fill(game.secret);
             const spyIdx = Math.floor(Math.random() * game.roles.length);
             game.roles[spyIdx] = "ШПИОН";
 
             game.current = 0;
             showScreen('screen-game');
-            setupCard();
+            
+            // Сразу рендерим первого игрока
+            renderCardContent();
+            // Убеждаемся, что шторка закрыта и интерфейс готов
+            resetCardState();
         }
 
-        function setupCard() {
-            isRevealed = false;
-            document.getElementById('curtain').classList.remove('hidden');
-            document.getElementById('actionBtn').style.opacity = '0';
-            document.getElementById('actionBtn').style.pointerEvents = 'none';
-            document.getElementById('playerCounter').innerText = `Игрок ${game.current + 1}`;
-            document.getElementById('statusHint').innerText = "Передай телефон этому игроку";
-            
-            // Заполнение скрытого контента
+        // Эта функция просто обновляет текст внутри (под шторкой)
+        function renderCardContent() {
             const role = game.roles[game.current];
             const wordEl = document.getElementById('roleWord');
             const hintEl = document.getElementById('roleHint');
@@ -352,15 +316,25 @@
                 wordEl.classList.remove('spy-text');
                 hintEl.innerText = `Тема: ${config.topic}`;
             }
+            
+            document.getElementById('playerCounter').innerText = `Игрок ${game.current + 1}`;
+        }
+
+        // Эта функция возвращает карточку в закрытое состояние
+        function resetCardState() {
+            isRevealed = false;
+            document.getElementById('curtain').classList.remove('hidden'); // ЗАКРЫВАЕМ
+            document.getElementById('actionBtn').style.opacity = '0';
+            document.getElementById('actionBtn').style.pointerEvents = 'none';
+            document.getElementById('statusHint').innerText = "Передай телефон этому игроку";
         }
 
         function revealCard() {
             if (isRevealed) return;
             isRevealed = true;
-            document.getElementById('curtain').classList.add('hidden');
+            document.getElementById('curtain').classList.add('hidden'); // ОТКРЫВАЕМ
             document.getElementById('statusHint').innerText = "Запомни свою роль";
             
-            // Показать кнопку "Далее" с задержкой
             setTimeout(() => {
                 const btn = document.getElementById('actionBtn');
                 btn.style.opacity = '1';
@@ -368,18 +342,32 @@
             }, 500);
         }
 
+        // САМОЕ ВАЖНОЕ ИСПРАВЛЕНИЕ ЗДЕСЬ
         function nextPlayer() {
-            game.current++;
-            if (game.current >= game.roles.length) {
-                startTimer();
-                showScreen('screen-timer');
-            } else {
-                setupCard();
-            }
+            // 1. Скрываем кнопку, чтобы нельзя было нажать дважды
+            const btn = document.getElementById('actionBtn');
+            btn.style.opacity = '0';
+            btn.style.pointerEvents = 'none';
+
+            // 2. Сначала закрываем шторку!
+            document.getElementById('curtain').classList.remove('hidden');
+            document.getElementById('statusHint').innerText = "Передаю ход...";
+
+            // 3. Ждем 400мс (пока шторка закроется), и только потом меняем данные
+            setTimeout(() => {
+                game.current++;
+                if (game.current >= game.roles.length) {
+                    startTimer();
+                    showScreen('screen-timer');
+                } else {
+                    renderCardContent(); // Меняем текст под закрытой шторкой
+                    resetCardState();    // Сбрасываем состояние
+                }
+            }, 400);
         }
 
         function startTimer() {
-            document.getElementById('finalWord').innerText = game.secret;
+            document.getElementById('finalWord').innerText = `${game.secret} (${config.topic})`;
             let time = 300;
             const display = document.getElementById('timerDisplay');
             
@@ -399,4 +387,3 @@
     </script>
 </body>
 </html>
-
